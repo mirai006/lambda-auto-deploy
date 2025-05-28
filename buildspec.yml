@@ -1,0 +1,13 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Nothing to install"
+  build:
+    commands:
+      - zip function.zip index.js
+
+artifacts:
+  files:
+    - function.zip
