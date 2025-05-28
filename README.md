@@ -55,6 +55,7 @@ phases:
   build:
     commands:
       - zip function.zip index.js
+      - aws lambda update-function-code --function-name my-hello-lambda --zip-file fileb://function.zip --region ap-northeast-1
 
 artifacts:
   files:
