@@ -122,3 +122,67 @@ Lambdaコンソールで「テスト」→ `Hello from CodePipeline + Lambda!` �
 
 必要であれば、\*\*CloudFormationやCDKでIaC（コードによる自動構築）\*\*もできます。
 「GUIで作りたい」「IaCで管理したい」などご希望あれば、それ向けに用意します！
+
+AWS Lambda 関数（例：`my-hello-lambda`）は、以下の手順で **マネジメントコンソールから簡単に作成**できます。
+
+---
+
+## 🧭 手順：Lambda 関数の作成（Node.js 編）
+
+### ① AWS コンソールにログイン
+
+→ [https://console.aws.amazon.com/lambda](https://console.aws.amazon.com/lambda)
+
+---
+
+### ② 「関数の作成」ボタンをクリック
+
+---
+
+### ③ 以下のように入力・選択
+
+| 項目    | 内容例                                                                   |
+| ----- | --------------------------------------------------------------------- |
+| 関数名   | `my-hello-lambda`                                                     |
+| ランタイム | `Node.js 18.x`                                                        |
+| 実行ロール | 「既存のロールを使用」or「新規作成」<br>→ とりあえず `lambda-basic-execution` ポリシーがついていればOK |
+
+※後でCodePipelineから更新するので「とりあえず関数を作るだけ」でOKです。
+
+---
+
+### ④ 作成ボタンをクリック
+
+---
+
+## ✅ 作成後に確認すること
+
+### ✅ コードが不要な場合（GitHubから自動で上書きされる）
+
+GitHub に push → CodeBuild で `function.zip` 作成 → Lambda に上書き
+
+### ✅ 関数の ARN を控える
+
+後で `CodePipeline` または `CodeBuild` から更新する際に必要になる場合があります。
+
+```
+arn:aws:lambda:ap-northeast-1:123456789012:function:my-hello-lambda
+```
+
+---
+
+## 🔒 実行ロールの注意点
+
+Lambda が CloudWatch にログを出力できるように、**最低限以下のポリシー**がロールについていればOK：
+
+```json
+{
+  "Effect": "Allow",
+  "Action": ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+  "Resource": "*"
+}
+```
+
+
+
+
