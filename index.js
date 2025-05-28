@@ -1,6 +1,6 @@
 exports.handler = async (event) => {
     return {
         statusCode: 200,
-        body: "Hello from Lambda! <- code pipeline <- GitHub "
+        body: "Updated Lambda! Now with new logic!"
     };
 };
