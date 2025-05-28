@@ -1,55 +1,52 @@
-GitHub のリポジトリ（この場合 `mirai006/lambda-auto-deploy`）にファイルを追加する方法は大きく分けて2つあります：
+いいですね！AWS Lambda に CodePipeline で自動デプロイする「**超シンプルなサンプル**」を紹介します。
 
 ---
 
-## ✅ 方法①：GitHub Web画面から直接ファイルを追加する
+## 🎯 目標
 
-### 手順：
-
-1. リポジトリのページで「**Add file**」ボタンをクリック
-   👉（`Code` タブの右側あたり）
-
-2. 「**Create new file**」を選択
-
-3. 例えば：
-
-   * `index.js` と入力してファイルを作成
-   * 中身を以下のように書く：
-
-     ```js
-     exports.handler = async (event) => {
-         return {
-             statusCode: 200,
-             body: "Hello from Lambda!"
-         };
-     };
-     ```
-
-4. 下にスクロールして「**Commit new file**」で保存
-
-> 同様に `buildspec.yml` も同じように追加できます。
+GitHub に Lambda 関数のコードを push → CodePipeline が自動で ZIP → Lambda にデプロイ
 
 ---
 
-## ✅ 方法②：ローカルPCで作成して `git push`
+## 📝 前提条件
 
-### 手順（ターミナル）：
+* AWS アカウント
+* GitHub リポジトリ（例：`lambda-auto-deploy`）
+* Lambda 関数を事前に作成（例：`my-hello-lambda`）
+* IAM ロール：
 
-```bash
-# クローン
-git clone https://github.com/mirai006/lambda-auto-deploy.git
-cd lambda-auto-deploy
+  * CodePipeline 実行用ロール
+  * CodeBuild 実行用ロール（Lambdaに書き込む権限が必要）
 
-# ファイル作成（index.js など）
-echo 'exports.handler = async (event) => {
-  return {
-    statusCode: 200,
-    body: "Hello from Lambda!"
-  };
-};' > index.js
+---
 
-# buildspec.yml も作る
-echo 'version: 0.2
+## 📁 GitHub リポジトリ構成（例）
+
+```
+lambda-auto-deploy/
+├── index.js
+└── buildspec.yml
+```
+
+---
+
+### ✨ `index.js`
+
+```js
+exports.handler = async (event) => {
+    return {
+        statusCode: 200,
+        body: "Hello from CodePipeline + Lambda!"
+    };
+};
+```
+
+---
+
+### ⚙️ `buildspec.yml`
+
+```yaml
+version: 0.2
 
 phases:
   install:
@@ -61,26 +58,67 @@ phases:
 
 artifacts:
   files:
-    - function.zip' > buildspec.yml
-
-# GitHubに反映
-git add .
-git commit -m "add lambda and buildspec"
-git push origin main
+    - function.zip
 ```
 
 ---
 
-## 🌟おすすめ
+## 🧪 Lambda デプロイ構成（CodePipeline）
 
-はじめてなら **GitHub Webから追加する方法**（方法①）が簡単でおすすめです！
+1. **ソースステージ**
+
+   * ソース：GitHub を選択（アクセストークン連携）
+
+2. **ビルドステージ（CodeBuild）**
+
+   * 環境：Amazon Linux（Node.js ランタイム不要）
+   * `buildspec.yml` を使って ZIP ファイル作成
+
+3. **デプロイステージ**
+
+   * デプロイ先：AWS Lambda
+   * 関数名：`my-hello-lambda`
+   * アーティファクト名：`function.zip`
 
 ---
 
-### ファイルを2つ追加しましょう：
+## 🛡 IAM ロールのポイント
 
-* `index.js`
-* `buildspec.yml`
+**CodeBuild ロール**には以下のポリシーが必要：
 
-追加できたら、「CodePipelineでデプロイ先にLambda関数を指定」して連携するステップに進めますよ！
-希望があれば一緒にその設定も説明します。
+```json
+{
+  "Effect": "Allow",
+  "Action": [
+    "lambda:UpdateFunctionCode"
+  ],
+  "Resource": "arn:aws:lambda:<region>:<account-id>:function:my-hello-lambda"
+}
+```
+
+---
+
+## ✅ 完成するとこうなる
+
+1. `index.js` を GitHub に push
+2. CodePipeline が自動で動く
+3. ZIP を作成 → Lambda に反映
+4. Lambda が即時更新！
+
+---
+
+## 📣 おまけ：テスト方法
+
+Lambdaコンソールで「テスト」→ `Hello from CodePipeline + Lambda!` と返ってくればOK。
+
+---
+
+## 📌 カスタムしたい？
+
+* Node.js 以外（Python, Go など）にも対応可能
+* 複数ファイル、依存ありの場合 → `npm install` や `pip install` も `buildspec.yml` に追加すればOK
+
+---
+
+必要であれば、\*\*CloudFormationやCDKでIaC（コードによる自動構築）\*\*もできます。
+「GUIで作りたい」「IaCで管理したい」などご希望あれば、それ向けに用意します！
